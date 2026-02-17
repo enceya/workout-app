@@ -62,12 +62,20 @@ export default function Dashboard({ user }: { user: User }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">My Workouts</h2>
-          <button
-            onClick={() => setShowNewWorkout(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            + New Workout
-          </button>
+          <div className="flex gap-3">
+            <a
+              href="/programs"
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              📚 Programs
+            </a>
+            <button
+              onClick={() => setShowNewWorkout(true)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              + New Workout
+            </button>
+          </div>
         </div>
 
         {showNewWorkout && (
