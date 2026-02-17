@@ -15,7 +15,9 @@ export async function createClient() {
         },
         setAll(cookiesToSet: any) {
           try {
-              cookiesToSet.forEach(({ name, value, options }: any) =>            )
+            cookiesToSet.forEach(({ name, value, options }: any) =>
+              cookieStore.set(name, value, options)
+            )
           } catch {
             // Server component - cookies can't be set
           }
