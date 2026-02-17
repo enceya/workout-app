@@ -28,7 +28,7 @@ export default function AdminImport() {
           name: data.name,
           description: data.description,
           total_weeks: data.total_weeks,
-        })
+        } as any)
         .select()
         .single()
 
@@ -39,7 +39,7 @@ export default function AdminImport() {
         const { data: phase, error: phaseError } = await supabase
           .from('program_phases')
           .insert({
-            program_id: program.id,
+            program_id: (program as any).id,
             phase_number: phaseData.phase_number,
             name: phaseData.name,
             objective: phaseData.objective,
@@ -57,7 +57,7 @@ export default function AdminImport() {
           const { data: workout, error: workoutError } = await supabase
             .from('program_workouts')
             .insert({
-              phase_id: phase.id,
+              phase_id: (phase as any).id,
               workout_number: workoutData.workout_number,
               name: workoutData.name,
               workout_type: workoutData.workout_type,
@@ -70,7 +70,7 @@ export default function AdminImport() {
 
           // Import exercises for this workout
           const exercises = workoutData.exercises.map((ex: any, idx: number) => ({
-            program_workout_id: workout.id,
+            program_workout_id: (workout as any).id,
             exercise_name: ex.name,
             order_index: idx,
             sets: ex.sets,
