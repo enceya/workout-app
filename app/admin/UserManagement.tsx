@@ -48,7 +48,7 @@ export default function UserManagement() {
       const supabase = createClient()
       const { error } = await supabase
         .from('profiles')
-        .update({ is_admin: !currentStatus })
+        .update({ is_admin: !currentStatus } as any)
         .eq('id', userId)
 
       if (error) throw error
