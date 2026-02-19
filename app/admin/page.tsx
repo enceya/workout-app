@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ProgramEditor from './ProgramEditor'
 
 export default function AdminImport() {
   const [programData, setProgramData] = useState('')
@@ -109,10 +110,11 @@ export default function AdminImport() {
   }
 
   const handleUpdate = async () => {
-    if (!editingProgram) return
+    if (!editingProgram || !editedData) return
 
     try {
       const supabase = createClient()
+      const data = JSON.parse(editedData)
       
       // Delete the old program (cascade will delete everything)
       await supabase
@@ -121,7 +123,6 @@ export default function AdminImport() {
         .eq('id', (editingProgram as any).id)
 
       // Re-import with new data (reuse the import logic)
-      const data = JSON.parse(editedData)
       
       // Import program
       const { data: program, error: programError } = await supabase
@@ -175,7 +176,7 @@ export default function AdminImport() {
             order_index: idx,
             sets: ex.sets,
             reps: ex.reps,
-            notes: ex.notes,
+            notes: ex.notes || '',
           }))
 
           const { error: exercisesError } = await supabase
@@ -400,41 +401,17 @@ export default function AdminImport() {
 
         {/* Edit Modal */}
         {editingProgram && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Edit Program: {(editingProgram as any).name}
-                </h2>
-              </div>
-              
-              <div className="p-6 overflow-y-auto flex-1">
-                <textarea
-                  value={editedData}
-                  onChange={(e) => setEditedData(e.target.value)}
-                  className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-                />
-              </div>
-
-              <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setEditingProgram(null)
-                    setEditedData('')
-                  }}
-                  className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdate}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
+          <ProgramEditor
+            initialData={JSON.parse(editedData)}
+            onSave={(data) => {
+              setEditedData(JSON.stringify(data, null, 2))
+              handleUpdate()
+            }}
+            onCancel={() => {
+              setEditingProgram(null)
+              setEditedData('')
+            }}
+          />
         )}
       </div>
     </div>
