@@ -13,7 +13,6 @@ export default function AdminImport() {
   const [loading, setLoading] = useState(true)
   const [editingProgram, setEditingProgram] = useState<any>(null)
   const [editedData, setEditedData] = useState('')
-  const [uploadingPdf, setUploadingPdf] = useState(false)
 
   useEffect(() => {
     loadPrograms()
@@ -47,24 +46,11 @@ export default function AdminImport() {
 
       if (error) throw error
 
-      setResult({ success: true, message: `Successfully deleted ${programName}` })
-      
-      // Reload programs from database
-      const { data } = await supabase
-        .from('workout_programs')
-        .select(`
-          *,
-          program_phases (count)
-        `)
-        .order('created_at', { ascending: false })
-      
-      if (data) {
-        setPrograms(data)
-      }
+      // Reload the page to show updated list
+      window.location.reload()
     } catch (error: any) {
       setResult({ success: false, message: `Error: ${error.message}` })
     }
-  }
   }
 
   const loadProgramData = async (programId: string) => {
@@ -321,76 +307,38 @@ export default function AdminImport() {
         {/* Program Import Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Import Workout Program</h2>
-        
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Program Data (JSON format)</h2>
+          
           <textarea
             value={programData}
             onChange={(e) => setProgramData(e.target.value)}
-            className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+            className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm mb-4"
             placeholder={`{
   "name": "MAPS Symmetry",
   "description": "Program description",
   "total_weeks": 11,
-  "phases": [
-    {
-      "phase_number": 1,
-      "name": "Phase I",
-      "objective": "Build strength and stability",
-      "duration_weeks": 2,
-      "workout_frequency_per_week": 5,
-      "rest_between_sets_seconds": 60,
-      "workouts": [
-        {
-          "workout_number": 1,
-          "name": "Workout #1",
-          "workout_type": "foundational",
-          "notes": "",
-          "exercises": [
-            {
-              "name": "Dunphy Squat Hold",
-              "sets": 2,
-              "reps": "15-second hold",
-              "notes": ""
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "phases": [...]
 }`}
           />
-        </div>
 
-        <button
-          onClick={handleImport}
-          disabled={importing}
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {importing ? 'Importing...' : 'Import Program'}
-        </button>
-
-        {result && (
-          <div
-            className={`mt-4 p-4 rounded-lg ${
-              result.success
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-4"
           >
-            {result.message}
-          </div>
-        )}
+            {importing ? 'Importing...' : 'Import Program'}
+          </button>
 
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-2">Quick Guide:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Paste your program data in JSON format above</li>
-            <li>• Workout types: "foundational", "mobility", "trigger", "focus"</li>
-            <li>• Reps can be numbers or text (e.g., "10 each leg", "15-second hold")</li>
-            <li>• All workouts will be imported with their exercises in order</li>
-          </ul>
-        </div>
+          {result && (
+            <div
+              className={`p-4 rounded-lg ${
+                result.success
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}
+            >
+              {result.message}
+            </div>
+          )}
         </div>
 
         {/* Existing Programs */}
@@ -431,7 +379,6 @@ export default function AdminImport() {
               ))}
             </div>
           )}
-        </div>
         </div>
 
         {/* Edit Modal */}
