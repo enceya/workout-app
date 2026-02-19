@@ -64,6 +64,12 @@ export default function Dashboard({ user }: { user: User }) {
           <h2 className="text-3xl font-bold text-gray-900">My Workouts</h2>
           <div className="flex gap-3">
             <a
+              href="/admin"
+              className="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+            >
+              ⚙️ Admin
+            </a>
+            <a
               href="/programs"
               className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
