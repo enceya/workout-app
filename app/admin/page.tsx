@@ -1,12 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AdminImport() {
   const [programData, setProgramData] = useState('')
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [programs, setPrograms] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadPrograms()
+  }, [])
+
+  const loadPrograms = async () => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('workout_programs')
+      .select(`
+        *,
+        program_phases (count)
+      `)
+      .order('created_at', { ascending: false })
+    
+    if (data) setPrograms(data)
+    setLoading(false)
+  }
+
+  const handleDelete = async (programId: string, programName: string) => {
+    if (!confirm(`Are you sure you want to delete "${programName}"? This will delete all phases, workouts, and exercises.`)) {
+      return
+    }
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('workout_programs')
+        .delete()
+        .eq('id', programId)
+
+      if (error) throw error
+
+      setResult({ success: true, message: `Successfully deleted ${programName}` })
+      loadPrograms() // Refresh the list
+    } catch (error: any) {
+      setResult({ success: false, message: `Error: ${error.message}` })
+    }
+  }
 
   const handleImport = async () => {
     if (!programData.trim()) {
@@ -88,6 +129,7 @@ export default function AdminImport() {
 
       setResult({ success: true, message: `Successfully imported ${data.name}!` })
       setProgramData('')
+      loadPrograms() // Refresh the list
     } catch (error: any) {
       setResult({ success: false, message: `Error: ${error.message}` })
     } finally {
@@ -168,6 +210,38 @@ export default function AdminImport() {
             <li>• Reps can be numbers or text (e.g., "10 each leg", "15-second hold")</li>
             <li>• All workouts will be imported with their exercises in order</li>
           </ul>
+        </div>
+
+        {/* Existing Programs */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Existing Programs</h2>
+          {loading ? (
+            <p className="text-gray-600">Loading programs...</p>
+          ) : programs.length === 0 ? (
+            <p className="text-gray-600">No programs yet. Import one above!</p>
+          ) : (
+            <div className="space-y-3">
+              {programs.map((program: any) => (
+                <div
+                  key={program.id}
+                  className="bg-white p-4 rounded-lg border border-gray-200 flex items-center justify-between"
+                >
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{program.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {program.program_phases?.[0]?.count || 0} phases • {program.total_weeks} weeks
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(program.id, program.name)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
