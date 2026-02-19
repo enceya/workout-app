@@ -53,19 +53,19 @@ export default async function WorkoutDetailPage({
           
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{workout.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{(workout as any).name}</h1>
               <p className="text-gray-600 mt-1">{(workout as any).program_phases.name}</p>
-              {workout.notes && (
-                <p className="text-sm text-gray-500 mt-2">{workout.notes}</p>
+              {(workout as any).notes && (
+                <p className="text-sm text-gray-500 mt-2">{(workout as any).notes}</p>
               )}
             </div>
             <span className={`text-xs px-3 py-1 rounded-full ${
-              workout.workout_type === 'foundational' ? 'bg-blue-100 text-blue-800' :
-              workout.workout_type === 'mobility' ? 'bg-green-100 text-green-800' :
-              workout.workout_type === 'trigger' ? 'bg-purple-100 text-purple-800' :
+              (workout as any).workout_type === 'foundational' ? 'bg-blue-100 text-blue-800' :
+              (workout as any).workout_type === 'mobility' ? 'bg-green-100 text-green-800' :
+              (workout as any).workout_type === 'trigger' ? 'bg-purple-100 text-purple-800' :
               'bg-orange-100 text-orange-800'
             }`}>
-              {workout.workout_type}
+              {(workout as any).workout_type}
             </span>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default async function WorkoutDetailPage({
         {user && (
           <StartWorkoutButton 
             workoutId={workoutId}
-            workoutName={workout.name}
+            workoutName={(workout as any).name}
             userId={user.id}
           />
         )}
