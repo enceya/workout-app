@@ -39,7 +39,7 @@ export default function AdminImport() {
         const { data: phase, error: phaseError } = await supabase
           .from('program_phases')
           .insert({
-            program_id: program.id,
+            program_id: (program as any).id,
             phase_number: phaseData.phase_number,
             name: phaseData.name,
             objective: phaseData.objective,
