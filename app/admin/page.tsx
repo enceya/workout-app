@@ -9,6 +9,8 @@ export default function AdminImport() {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
   const [programs, setPrograms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingProgram, setEditingProgram] = useState<any>(null)
+  const [editedData, setEditedData] = useState('')
 
   useEffect(() => {
     loadPrograms()
@@ -44,6 +46,150 @@ export default function AdminImport() {
 
       setResult({ success: true, message: `Successfully deleted ${programName}` })
       loadPrograms() // Refresh the list
+    } catch (error: any) {
+      setResult({ success: false, message: `Error: ${error.message}` })
+    }
+  }
+
+  const loadProgramData = async (programId: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Get full program with all nested data
+      const { data: program } = await supabase
+        .from('workout_programs')
+        .select('*')
+        .eq('id', programId)
+        .single()
+
+      const { data: phases } = await supabase
+        .from('program_phases')
+        .select(`
+          *,
+          program_workouts (
+            *,
+            program_workout_exercises (*)
+          )
+        `)
+        .eq('program_id', programId)
+        .order('phase_number')
+
+      // Format as JSON for editing
+      const formattedData = {
+        name: (program as any).name,
+        description: (program as any).description,
+        total_weeks: (program as any).total_weeks,
+        phases: (phases as any[]).map((phase: any) => ({
+          phase_number: phase.phase_number,
+          name: phase.name,
+          objective: phase.objective,
+          duration_weeks: phase.duration_weeks,
+          workout_frequency_per_week: phase.workout_frequency_per_week,
+          rest_between_sets_seconds: phase.rest_between_sets_seconds,
+          workouts: phase.program_workouts.map((workout: any) => ({
+            workout_number: workout.workout_number,
+            name: workout.name,
+            workout_type: workout.workout_type,
+            notes: workout.notes,
+            exercises: workout.program_workout_exercises.map((ex: any) => ({
+              name: ex.exercise_name,
+              sets: ex.sets,
+              reps: ex.reps,
+              notes: ex.notes
+            }))
+          }))
+        }))
+      }
+
+      setEditedData(JSON.stringify(formattedData, null, 2))
+      setEditingProgram(program)
+    } catch (error: any) {
+      setResult({ success: false, message: `Error loading program: ${error.message}` })
+    }
+  }
+
+  const handleUpdate = async () => {
+    if (!editingProgram) return
+
+    try {
+      const supabase = createClient()
+      
+      // Delete the old program (cascade will delete everything)
+      await supabase
+        .from('workout_programs')
+        .delete()
+        .eq('id', (editingProgram as any).id)
+
+      // Re-import with new data (reuse the import logic)
+      const data = JSON.parse(editedData)
+      
+      // Import program
+      const { data: program, error: programError } = await supabase
+        .from('workout_programs')
+        .insert({
+          name: data.name,
+          description: data.description,
+          total_weeks: data.total_weeks,
+        } as any)
+        .select()
+        .single()
+
+      if (programError) throw programError
+
+      // Import phases (same as import function)
+      for (const phaseData of data.phases) {
+        const { data: phase, error: phaseError } = await supabase
+          .from('program_phases')
+          .insert({
+            program_id: (program as any).id,
+            phase_number: phaseData.phase_number,
+            name: phaseData.name,
+            objective: phaseData.objective,
+            duration_weeks: phaseData.duration_weeks,
+            workout_frequency_per_week: phaseData.workout_frequency_per_week,
+            rest_between_sets_seconds: phaseData.rest_between_sets_seconds,
+          } as any)
+          .select()
+          .single()
+
+        if (phaseError) throw phaseError
+
+        for (const workoutData of phaseData.workouts) {
+          const { data: workout, error: workoutError } = await supabase
+            .from('program_workouts')
+            .insert({
+              phase_id: (phase as any).id,
+              workout_number: workoutData.workout_number,
+              name: workoutData.name,
+              workout_type: workoutData.workout_type,
+              notes: workoutData.notes,
+            } as any)
+            .select()
+            .single()
+
+          if (workoutError) throw workoutError
+
+          const exercises = workoutData.exercises.map((ex: any, idx: number) => ({
+            program_workout_id: (workout as any).id,
+            exercise_name: ex.name,
+            order_index: idx,
+            sets: ex.sets,
+            reps: ex.reps,
+            notes: ex.notes,
+          }))
+
+          const { error: exercisesError } = await supabase
+            .from('program_workout_exercises')
+            .insert(exercises as any)
+
+          if (exercisesError) throw exercisesError
+        }
+      }
+
+      setResult({ success: true, message: `Successfully updated ${data.name}!` })
+      setEditingProgram(null)
+      setEditedData('')
+      loadPrograms()
     } catch (error: any) {
       setResult({ success: false, message: `Error: ${error.message}` })
     }
@@ -232,17 +378,64 @@ export default function AdminImport() {
                       {program.program_phases?.[0]?.count || 0} phases • {program.total_weeks} weeks
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleDelete(program.id, program.name)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => loadProgramData(program.id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(program.id, program.name)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Edit Modal */}
+        {editingProgram && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Edit Program: {(editingProgram as any).name}
+                </h2>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1">
+                <textarea
+                  value={editedData}
+                  onChange={(e) => setEditedData(e.target.value)}
+                  className="w-full h-96 px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                />
+              </div>
+
+              <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setEditingProgram(null)
+                    setEditedData('')
+                  }}
+                  className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdate}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
