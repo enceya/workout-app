@@ -91,6 +91,54 @@ export default function ProgramEditor({
     setData({ ...data, phases: newPhases })
   }
 
+  const addWorkout = (phaseIdx: number) => {
+    const newPhases = [...data.phases]
+    const currentWorkouts = newPhases[phaseIdx].workouts
+    const nextWorkoutNumber = currentWorkouts.length > 0 
+      ? Math.max(...currentWorkouts.map(w => w.workout_number)) + 1 
+      : 1
+    
+    newPhases[phaseIdx].workouts.push({
+      workout_number: nextWorkoutNumber,
+      name: `Workout #${nextWorkoutNumber}`,
+      workout_type: 'foundational',
+      notes: '',
+      exercises: []
+    })
+    setData({ ...data, phases: newPhases })
+  }
+
+  const deleteWorkout = (phaseIdx: number, workoutIdx: number) => {
+    if (!confirm('Are you sure you want to delete this workout?')) return
+    const newPhases = [...data.phases]
+    newPhases[phaseIdx].workouts.splice(workoutIdx, 1)
+    setData({ ...data, phases: newPhases })
+  }
+
+  const addPhase = () => {
+    const nextPhaseNumber = data.phases.length > 0 
+      ? Math.max(...data.phases.map(p => p.phase_number)) + 1 
+      : 1
+    
+    const newPhase: Phase = {
+      phase_number: nextPhaseNumber,
+      name: `Phase ${nextPhaseNumber}`,
+      objective: '',
+      duration_weeks: 2,
+      workout_frequency_per_week: 5,
+      rest_between_sets_seconds: 60,
+      workouts: []
+    }
+    setData({ ...data, phases: [...data.phases, newPhase] })
+  }
+
+  const deletePhase = (phaseIdx: number) => {
+    if (!confirm('Are you sure you want to delete this phase?')) return
+    const newPhases = [...data.phases]
+    newPhases.splice(phaseIdx, 1)
+    setData({ ...data, phases: newPhases })
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full my-8">
@@ -132,6 +180,15 @@ export default function ProgramEditor({
 
           {/* Phases */}
           <div className="space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-900">Phases</h3>
+              <button
+                onClick={addPhase}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                + Add Phase
+              </button>
+            </div>
             {data.phases.map((phase, phaseIdx) => (
               <div key={phaseIdx} className="border border-gray-300 rounded-lg">
                 <button
@@ -139,7 +196,18 @@ export default function ProgramEditor({
                   className="w-full p-4 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg flex justify-between items-center"
                 >
                   <span className="font-semibold">{phase.name}</span>
-                  <span>{expandedPhase === phaseIdx ? '▼' : '▶'}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deletePhase(phaseIdx)
+                      }}
+                      className="text-red-600 hover:text-red-800 px-2 py-1 text-sm"
+                    >
+                      Delete Phase
+                    </button>
+                    <span>{expandedPhase === phaseIdx ? '▼' : '▶'}</span>
+                  </div>
                 </button>
 
                 {expandedPhase === phaseIdx && (
@@ -177,7 +245,15 @@ export default function ProgramEditor({
 
                     {/* Workouts */}
                     <div className="mt-4">
-                      <h4 className="font-semibold mb-2">Workouts</h4>
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-semibold">Workouts</h4>
+                        <button
+                          onClick={() => addWorkout(phaseIdx)}
+                          className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        >
+                          + Add Workout
+                        </button>
+                      </div>
                       {phase.workouts.map((workout, workoutIdx) => (
                         <div key={workoutIdx} className="border border-gray-200 rounded-lg mb-3">
                           <button
@@ -192,9 +268,20 @@ export default function ProgramEditor({
                             className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-t-lg flex justify-between items-center"
                           >
                             <span className="text-sm font-medium">{workout.name}</span>
-                            <span className="text-xs">
-                              {expandedWorkout?.phaseIdx === phaseIdx && expandedWorkout?.workoutIdx === workoutIdx ? '▼' : '▶'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteWorkout(phaseIdx, workoutIdx)
+                                }}
+                                className="text-red-600 hover:text-red-800 px-2 text-xs"
+                              >
+                                Delete
+                              </button>
+                              <span className="text-xs">
+                                {expandedWorkout?.phaseIdx === phaseIdx && expandedWorkout?.workoutIdx === workoutIdx ? '▼' : '▶'}
+                              </span>
+                            </div>
                           </button>
 
                           {expandedWorkout?.phaseIdx === phaseIdx && expandedWorkout?.workoutIdx === workoutIdx && (
