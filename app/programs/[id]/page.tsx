@@ -2,14 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-export default async function ProgramDetailPage({ params }: { params: { id: string } }) {
+export default async function ProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   // Get program
   const { data: program } = await supabase
     .from('workout_programs')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!program) return notFound()
@@ -27,7 +28,7 @@ export default async function ProgramDetailPage({ params }: { params: { id: stri
         notes
       )
     `)
-    .eq('program_id', params.id)
+    .eq('program_id', id)
     .order('phase_number')
 
   return (
@@ -75,7 +76,7 @@ export default async function ProgramDetailPage({ params }: { params: { id: stri
                       .map((workout: any) => (
                         <Link
                           key={workout.id}
-                          href={`/programs/${params.id}/workouts/${workout.id}`}
+                          href={`/programs/${id}/workouts/${workout.id}`}
                           className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
                         >
                           <div className="flex items-start justify-between mb-2">
