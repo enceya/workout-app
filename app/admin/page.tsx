@@ -59,6 +59,7 @@ export default function AdminImport() {
       setLoading(false)
     }
   }
+  }
 
   const loadProgramData = async (programId: string) => {
     try {
