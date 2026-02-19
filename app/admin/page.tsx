@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ProgramEditor from './ProgramEditor'
+import UserManagement from './UserManagement'
 
 export default function AdminImport() {
   const [programData, setProgramData] = useState('')
@@ -286,8 +287,26 @@ export default function AdminImport() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Import Workout Program</h1>
+      <div className="max-w-6xl mx-auto">
+        {/* Header with Back Button */}
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <a
+            href="/"
+            className="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+          >
+            ← Back to Dashboard
+          </a>
+        </div>
+
+        {/* User Management Section */}
+        <div className="mb-8">
+          <UserManagement />
+        </div>
+
+        {/* Program Import Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Import Workout Program</h2>
         
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
           <h2 className="text-lg font-semibold mb-4">Program Data (JSON format)</h2>
@@ -358,9 +377,10 @@ export default function AdminImport() {
             <li>• All workouts will be imported with their exercises in order</li>
           </ul>
         </div>
+        </div>
 
         {/* Existing Programs */}
-        <div className="mt-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Existing Programs</h2>
           {loading ? (
             <p className="text-gray-600">Loading programs...</p>
@@ -397,6 +417,7 @@ export default function AdminImport() {
               ))}
             </div>
           )}
+        </div>
         </div>
 
         {/* Edit Modal */}
