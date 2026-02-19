@@ -46,9 +46,10 @@ export default function UserManagement() {
   const toggleAdmin = async (userId: string, currentStatus: boolean, userEmail: string) => {
     try {
       const supabase = createClient()
+      // @ts-ignore - Type inference issue with Supabase client
       const { error } = await supabase
         .from('profiles')
-        .update({ is_admin: !currentStatus } as any)
+        .update({ is_admin: !currentStatus })
         .eq('id', userId)
 
       if (error) throw error
