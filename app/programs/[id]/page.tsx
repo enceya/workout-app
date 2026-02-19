@@ -38,11 +38,11 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           <Link href="/programs" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
             ← Back to Programs
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{program.name}</h1>
-          {program.description && (
-            <p className="text-gray-600 mt-2">{program.description}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{(program as any).name}</h1>
+          {(program as any).description && (
+            <p className="text-gray-600 mt-2">{(program as any).description}</p>
           )}
-          <p className="text-sm text-gray-500 mt-1">{program.total_weeks} weeks total</p>
+          <p className="text-sm text-gray-500 mt-1">{(program as any).total_weeks} weeks total</p>
         </div>
 
         {!phases || phases.length === 0 ? (
