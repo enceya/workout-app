@@ -6,8 +6,9 @@ import StartWorkoutButton from './StartWorkoutButton'
 export default async function WorkoutDetailPage({ 
   params 
 }: { 
-  params: { id: string; workoutId: string } 
+  params: Promise<{ id: string; workoutId: string }> 
 }) {
+  const { id, workoutId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -30,7 +31,7 @@ export default async function WorkoutDetailPage({
         program_id
       )
     `)
-    .eq('id', params.workoutId)
+    .eq('id', workoutId)
     .single()
 
   if (!workout) return notFound()
@@ -101,7 +102,7 @@ export default async function WorkoutDetailPage({
 
         {user && (
           <StartWorkoutButton 
-            workoutId={params.workoutId}
+            workoutId={workoutId}
             workoutName={workout.name}
             userId={user.id}
           />
