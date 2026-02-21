@@ -127,7 +127,7 @@ export default function Dashboard({ user }: { user: User }) {
         )}
 
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-          <WorkoutList />
+          <WorkoutList userId={user.id} />
         </div>
       </main>
     </div>
