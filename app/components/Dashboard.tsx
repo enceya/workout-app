@@ -119,7 +119,8 @@ export default function Dashboard({ user }: { user: User }) {
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-8">
               <NewWorkout 
                 exercises={exercises} 
-                onClose={() => setShowNewWorkout(false)} 
+                onClose={() => setShowNewWorkout(false)}
+                userId={user.id}
               />
             </div>
           </div>
